@@ -49,7 +49,8 @@ namespace MQTTnet.Server
                 return;
             }
 
-            Task.Run(() => SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken);
+            //Task.Run(() => SendQueuedPacketsAsync(adapter, cancellationToken), cancellationToken);
+            Task.Run(() => SendQueuedPacketsAsync(adapter, cancellationToken));
         }
 
         public void Enqueue(MqttBasePacket packet)
@@ -97,7 +98,10 @@ namespace MQTTnet.Server
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    await TrySendNextQueuedPacketAsync(adapter, cancellationToken).ConfigureAwait(false);
+                    using (var cts = new CancellationTokenSource())
+                        //await TrySendNextQueuedPacketAsync(adapter, cancellationToken).ConfigureAwait(false);
+                        await TrySendNextQueuedPacketAsync(adapter, cts.Token).ConfigureAwait(false);
+
                 }
             }
             catch (OperationCanceledException)
@@ -124,7 +128,8 @@ namespace MQTTnet.Server
 
                 if (packet == null)
                 {
-                    await _queueAutoResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(false);
+                    //await _queueAutoResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(false);
+                    await _queueAutoResetEvent.WaitOneAsync().ConfigureAwait(false);
                     return;
                 }
 
@@ -133,7 +138,13 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                adapter.SendPacketAsync(packet, cancellationToken).GetAwaiter().GetResult();
+                using (var cts = new CancellationTokenSource())
+                {
+                    //adapter.SendPacketAsync(packet, cts.Token).GetAwaiter().GetResult();
+
+                    await adapter.SendPacketAsync(packet, cts.Token).ConfigureAwait(false);
+                }
+                
 
                 _logger.Verbose("Enqueued packet sent (ClientId: {0}).", _clientSession.ClientId);
             }

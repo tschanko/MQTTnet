@@ -94,7 +94,15 @@ namespace MQTTnet.Server
                 return;
             }
 
-            publishPacket = new MqttPublishPacket
+            //publishPacket = new MqttPublishPacket
+            //{
+            //    Topic = publishPacket.Topic,
+            //    Payload = publishPacket.Payload,
+            //    QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel,
+            //    Retain = publishPacket.Retain,
+            //    Dup = false
+            //};
+            var publishPacketClone = new MqttPublishPacket
             {
                 Topic = publishPacket.Topic,
                 Payload = publishPacket.Payload,
@@ -103,31 +111,32 @@ namespace MQTTnet.Server
                 Dup = false
             };
 
-            if (publishPacket.QualityOfServiceLevel > 0)
-            {
-                publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
-            }
+            //if (publishPacket.QualityOfServiceLevel > 0)
+            //{
+            //    publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
+            //}
 
-            if (_options.ClientMessageQueueInterceptor != null)
-            {
-                var context = new MqttClientMessageQueueInterceptorContext(
-                    senderClientSession?.ClientId,
-                    ClientId,
-                    publishPacket.ToApplicationMessage());
+            //if (_options.ClientMessageQueueInterceptor != null)
+            //{
+            //    var context = new MqttClientMessageQueueInterceptorContext(
+            //        senderClientSession?.ClientId,
+            //        ClientId,
+            //        publishPacket.ToApplicationMessage());
 
-                _options.ClientMessageQueueInterceptor?.Invoke(context);
+            //    _options.ClientMessageQueueInterceptor?.Invoke(context);
 
-                if (!context.AcceptEnqueue || context.ApplicationMessage == null)
-                {
-                    return;
-                }
+            //    if (!context.AcceptEnqueue || context.ApplicationMessage == null)
+            //    {
+            //        return;
+            //    }
 
-                publishPacket.Topic = context.ApplicationMessage.Topic;
-                publishPacket.Payload = context.ApplicationMessage.Payload;
-                publishPacket.QualityOfServiceLevel = context.ApplicationMessage.QualityOfServiceLevel;
-            }
+            //    publishPacket.Topic = context.ApplicationMessage.Topic;
+            //    publishPacket.Payload = context.ApplicationMessage.Payload;
+            //    publishPacket.QualityOfServiceLevel = context.ApplicationMessage.QualityOfServiceLevel;
+            //}
 
-            _pendingPacketsQueue.Enqueue(publishPacket);
+            //_pendingPacketsQueue.Enqueue(publishPacket);
+            _pendingPacketsQueue.Enqueue(publishPacketClone);
         }
 
         public Task SubscribeAsync(IList<TopicFilter> topicFilters)
@@ -240,11 +249,22 @@ namespace MQTTnet.Server
 
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationTokenSource.Token).ConfigureAwait(false);
-                    if (packet != null)
+                    MqttBasePacket packet = null;
+                    using (var cts = new CancellationTokenSource())
                     {
-                        _keepAliveMonitor.PacketReceived(packet);
-                        ProcessReceivedPacket(adapter, packet, _cancellationTokenSource.Token);
+                        packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, cts.Token).ConfigureAwait(false);
+
+
+                        //var packet = await adapter.ReceivePacketAsync(TimeSpan.Zero, _cancellationTokenSource.Token).ConfigureAwait(false);
+                        if (packet != null)
+                        {
+                            _keepAliveMonitor.PacketReceived(packet);
+                            //ProcessReceivedPacket(adapter, packet, _cancellationTokenSource.Token);
+
+
+                            ProcessReceivedPacket(adapter, packet, cts.Token);
+
+                        }
                     }
                 }
             }

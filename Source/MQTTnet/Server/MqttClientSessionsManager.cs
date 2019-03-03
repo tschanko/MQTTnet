@@ -88,7 +88,8 @@ namespace MQTTnet.Server
         {
             if (publishPacket == null) throw new ArgumentNullException(nameof(publishPacket));
 
-            _messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, publishPacket), _cancellationToken);
+            //_messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, publishPacket), _cancellationToken);
+            _messageQueue.Add(new MqttEnqueuedApplicationMessage(senderClientSession, publishPacket));
         }
 
         public Task SubscribeAsync(string clientId, IList<TopicFilter> topicFilters)
@@ -160,7 +161,8 @@ namespace MQTTnet.Server
         {
             try
             {
-                var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                //var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
+                var enqueuedApplicationMessage = _messageQueue.Take();
                 var sender = enqueuedApplicationMessage.Sender;
                 var applicationMessage = enqueuedApplicationMessage.PublishPacket.ToApplicationMessage();
 
@@ -194,6 +196,7 @@ namespace MQTTnet.Server
                     // Set the retain flag to true according to [MQTT-3.3.1-9].
                     publishPacket.Retain = false;
 
+                    //clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, publishPacket);
                     clientSession.EnqueueApplicationMessage(enqueuedApplicationMessage.Sender, publishPacket);
                 }
             }

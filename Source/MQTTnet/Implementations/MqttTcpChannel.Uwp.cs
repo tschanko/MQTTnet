@@ -89,7 +89,8 @@ namespace MQTTnet.Implementations
 
         public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return _readStream.ReadAsync(buffer, offset, count, cancellationToken);
+            //return _readStream.ReadAsync(buffer, offset, count, cancellationToken);
+            return _readStream.ReadAsync(buffer, offset, count);
         }
 
         public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -98,7 +99,8 @@ namespace MQTTnet.Implementations
             // async/await required. The real network transmit is done when calling the
             // Flush method.
             _writeStream.Write(buffer, offset, count);
-            return _writeStream.FlushAsync(cancellationToken);
+            //return _writeStream.FlushAsync(cancellationToken);
+            return _writeStream.FlushAsync();
         }
 
         public void Dispose()
