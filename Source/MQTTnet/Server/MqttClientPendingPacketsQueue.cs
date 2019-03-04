@@ -98,10 +98,8 @@ namespace MQTTnet.Server
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    using (var cts = new CancellationTokenSource())
-                        //await TrySendNextQueuedPacketAsync(adapter, cancellationToken).ConfigureAwait(false);
+                    using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                         await TrySendNextQueuedPacketAsync(adapter, cts.Token).ConfigureAwait(false);
-
                 }
             }
             catch (OperationCanceledException)
@@ -128,6 +126,7 @@ namespace MQTTnet.Server
 
                 if (packet == null)
                 {
+                    // WARN: Passing a cancellationToken introduces a memory leak
                     //await _queueAutoResetEvent.WaitOneAsync(cancellationToken).ConfigureAwait(false);
                     await _queueAutoResetEvent.WaitOneAsync().ConfigureAwait(false);
                     return;
@@ -138,7 +137,8 @@ namespace MQTTnet.Server
                     return;
                 }
 
-                using (var cts = new CancellationTokenSource())
+                //using (var cts = new CancellationTokenSource())
+                using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
                     //adapter.SendPacketAsync(packet, cts.Token).GetAwaiter().GetResult();
 

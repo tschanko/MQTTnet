@@ -12,6 +12,7 @@
         <StackPanel>
             <Button Content="Setup" Click="ButtonBase_OnClick" Height="60" Width="120" Margin="10"/>
             <Button Content="Send" Click="ButtonSend_OnClick" Height="60" Width="120" Margin="10"/>
+            <Button Content="Send Loads" Click="ButtonSendLoads_OnClick" Height="60" Width="120" Margin="10"/>
         </StackPanel>
         
     </Grid>

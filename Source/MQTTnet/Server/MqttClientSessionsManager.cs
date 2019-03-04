@@ -145,6 +145,7 @@ namespace MQTTnet.Server
             {
                 try
                 {
+                    
                     TryProcessNextQueuedApplicationMessage(cancellationToken);
                 }
                 catch (OperationCanceledException)
@@ -161,6 +162,7 @@ namespace MQTTnet.Server
         {
             try
             {
+                
                 //var enqueuedApplicationMessage = _messageQueue.Take(cancellationToken);
                 var enqueuedApplicationMessage = _messageQueue.Take();
                 var sender = enqueuedApplicationMessage.Sender;

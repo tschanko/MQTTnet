@@ -163,5 +163,20 @@ namespace MemoryLeak
         {
             await StartTest();
         }
+
+        private async void ButtonSendLoads_OnClick(object sender, RoutedEventArgs e)
+        {
+            for (int i = 0; i < 50000; i++)
+            {
+                var message = new MqttApplicationMessageBuilder()
+                    .WithTopic("test")
+                    .WithPayload($"Message {i}")
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                    .WithRetainFlag(false)
+                    .Build();
+               
+                await _mqttClient1.PublishAsync(message);
+            }
+        }
     }
 }

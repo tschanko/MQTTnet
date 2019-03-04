@@ -136,6 +136,30 @@ namespace MQTTnet.Server
             //}
 
             //_pendingPacketsQueue.Enqueue(publishPacket);
+
+            if (publishPacketClone.QualityOfServiceLevel > 0)
+            {
+                publishPacketClone.PacketIdentifier = _packetIdentifierProvider.GetNewPacketIdentifier();
+            }
+
+            if (_options.ClientMessageQueueInterceptor != null)
+            {
+                var context = new MqttClientMessageQueueInterceptorContext(
+                    senderClientSession?.ClientId,
+                    ClientId,
+                    publishPacketClone.ToApplicationMessage());
+
+                _options.ClientMessageQueueInterceptor?.Invoke(context);
+
+                if (!context.AcceptEnqueue || context.ApplicationMessage == null)
+                {
+                    return;
+                }
+
+                publishPacketClone.Topic = context.ApplicationMessage.Topic;
+                publishPacketClone.Payload = context.ApplicationMessage.Payload;
+                publishPacketClone.QualityOfServiceLevel = context.ApplicationMessage.QualityOfServiceLevel;
+            }
             _pendingPacketsQueue.Enqueue(publishPacketClone);
         }
 
